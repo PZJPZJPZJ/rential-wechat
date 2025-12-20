@@ -1,0 +1,22 @@
+# Editor directories and files
+.git
+.idea
+.vscode
+.DS_Store
+# Dependency directories
+node_modules/
+$node_modules/
+miniprogram_npm/
+yarn.lock
+package-lock.json
+components/**/*.lock
+components/**/package-lock.json
+project.private.config.json
+# Build output directories
+**/dist
+miniprogram/
+miniprogram_dist/
+# Cache and logs directories
+.history/
+.eslintcache
+yarn-error.log

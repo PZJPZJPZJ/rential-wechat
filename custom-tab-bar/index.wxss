@@ -1,0 +1,16 @@
+.custom-t-tab-bar{
+  background-color: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+}
+.custom-t-tab-bar-item{
+  background-color: transparent;
+}
+.custom-tab-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.custom-tab-bar-wrapper .text {
+  font-size: 20rpx;
+}
