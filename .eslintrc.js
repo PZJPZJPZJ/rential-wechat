@@ -21,7 +21,7 @@ module.exports = {
     global: true,
     __wxConfig: true,
   },
-  ignorePatterns: ['*.wxs'],
+  ignorePatterns: ['*.wxs', 'backend/'],
   rules: {
     'prettier/prettier': 'warn',
     'no-undef': 'off',
