@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────
+// 用户
+// ─────────────────────────────────────────────────
+model User {
+  id          Int          @id @default(autoincrement())
+  openid      String       @unique          // 微信 openid
+  nickname    String?
+  avatarUrl   String?
+  phone       String?
+  gender      Int?                          // 1=男 2=女 0=未知
+  points      Int          @default(0)      // 积分
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  sessions    Session[]
+  cart        Cart[]
+  orders      Order[]
+  addresses   Address[]
+  userCoupons UserCoupon[]
+  comments    Comment[]
+  searchHistory SearchHistory[]
+}
+
+// ─────────────────────────────────────────────────
+// 用户会话记录 (Session Token)
+// ─────────────────────────────────────────────────
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique              // 随机生成的 Session Token (如 UUID)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime                      // 过期时间
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────
+// 商品分类（支持多级，parentId 为 null 表示顶级分类）
+// ─────────────────────────────────────────────────
+model Category {
+  id        Int        @id @default(autoincrement())
+  groupId   String     @unique              // 对应前端 groupId，如 "24948"
+  name      String
+  thumbnail String?
+  parentId  Int?
+  parent    Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryChildren")
+  sort      Int        @default(0)
+  goods     Goods[]
+}
+
+// ─────────────────────────────────────────────────
+// 商品 SPU（标准产品单元）
+// ─────────────────────────────────────────────────
+model Goods {
+  id               Int       @id @default(autoincrement())
+  spuId            String    @unique           // 前端 spuId，字符串类型
+  title            String
+  primaryImage     String
+  images           String                      // JSON 字符串，图片 URL 数组
+  video            String?
+  desc             String?                     // JSON 字符串，商品详情图片数组
+  minSalePrice     Int                         // 最低售价（分）
+  maxSalePrice     Int                         // 最高售价（分）
+  minLinePrice     Int                         // 最低划线价（分）
+  maxLinePrice     Int                         // 最高划线价（分）
+  spuStockQuantity Int       @default(0)       // 总库存
+  soldNum          Int       @default(0)       // 已售数量
+  isPutOnSale      Int       @default(1)       // 是否上架：1=上架 0=下架
+  isSoldOut        Boolean   @default(false)   // 是否售罄
+  storeId          String    @default("1000")
+  etitle           String?                     // 副标题
+  categoryId       Int?
+  category         Category? @relation(fields: [categoryId], references: [id])
+  skus             Sku[]
+  spuTags          SpuTag[]
+  comments         Comment[]
+  specGroups       SpecGroup[]                 // 规格组
+  limitInfo        String?                     // JSON，如 [{text:"限购5件"}]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────────
+// 商品标签（如"限时抢购"、"联名系列"）
+// ─────────────────────────────────────────────────
+model SpuTag {
+  id      Int    @id @default(autoincrement())
+  tagId   String?
+  title   String
+  image   String?
+  goodsId Int
+  goods   Goods  @relation(fields: [goodsId], references: [id])
+}
+
+// ─────────────────────────────────────────────────
+// 规格组（如"颜色"、"尺码"）
+// ─────────────────────────────────────────────────
+model SpecGroup {
+  id         Int         @id @default(autoincrement())
+  specId     String                               // 前端 specId
+  title      String                               // 规格名称，如"颜色"
+  goodsId    Int
+  goods      Goods       @relation(fields: [goodsId], references: [id])
+  specValues SpecValue[]
+}
+
+// ─────────────────────────────────────────────────
+// 规格值（如"米色荷叶边"、"S"、"M"、"L"）
+// ─────────────────────────────────────────────────
+model SpecValue {
+  id           Int       @id @default(autoincrement())
+  specValueId  String                               // 前端 specValueId
+  specValue    String                               // 规格值，如"红色"
+  image        String?
+  specGroupId  Int
+  specGroup    SpecGroup @relation(fields: [specGroupId], references: [id])
+}
+
+// ─────────────────────────────────────────────────
+// 商品 SKU（最小库存单元）
+// ─────────────────────────────────────────────────
+model Sku {
+  id            Int     @id @default(autoincrement())
+  skuId         String  @unique                    // 前端 skuId
+  skuImage      String?
+  // specInfo: JSON 数组，每项 {specId, specTitle, specValueId, specValue}
+  specInfo      String
+  salePrice     Int                                // 销售价（分），priceType=1
+  linePrice     Int                                // 划线价（分），priceType=2
+  stockQuantity Int     @default(0)
+  soldQuantity  Int     @default(0)
+  goodsId       Int
+  goods         Goods   @relation(fields: [goodsId], references: [id])
+  cartItems     Cart[]
+}
+
+// ─────────────────────────────────────────────────
+// 购物车
+// ─────────────────────────────────────────────────
+model Cart {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  skuId      Int
+  sku        Sku      @relation(fields: [skuId], references: [id])
+  quantity   Int      @default(1)
+  isSelected Int      @default(1)                 // 1=已选中 0=未选中
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────
+// 订单
+// ─────────────────────────────────────────────────
+model Order {
+  id            Int         @id @default(autoincrement())
+  orderNo       String      @unique               // 订单号，如 "ORD202600001"
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  // 订单状态：5=待付款 10=待发货 40=待收货 50=已完成 80=已取消
+  status        Int         @default(5)
+  totalAmount   Int                               // 实付金额（分）
+  goodsAmount   Int                               // 商品总金额（分）
+  discountAmount Int        @default(0)           // 优惠金额（分）
+  freightAmount Int         @default(0)           // 运费（分）
+  // addressInfo: JSON 快照（下单时地址副本，不随用户修改地址变动）
+  addressInfo   String
+  couponId      Int?
+  remark        String?                           // 买家备注
+  payTime       DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items         OrderItem[]
+  logistics     Logistics?
+  afterServices AfterService[]
+}
+
+// ─────────────────────────────────────────────────
+// 订单商品项（快照）
+// ─────────────────────────────────────────────────
+model OrderItem {
+  id       Int    @id @default(autoincrement())
+  orderId  Int
+  order    Order  @relation(fields: [orderId], references: [id])
+  spuId    String
+  skuId    String
+  title    String
+  image    String
+  // specInfo: JSON 快照，如 [{specTitle:"颜色",specValue:"经典白"}]
+  specInfo String
+  price    Int                                    // 成交单价（分）
+  quantity Int
+}
+
+// ─────────────────────────────────────────────────
+// 物流信息
+// ─────────────────────────────────────────────────
+model Logistics {
+  id              Int    @id @default(autoincrement())
+  orderId         Int    @unique
+  order           Order  @relation(fields: [orderId], references: [id])
+  company         String                          // 快递公司
+  trackNo         String                          // 运单号
+  receiverName    String
+  receiverPhone   String
+  receiverAddress String
+  // traces: JSON 数组，物流轨迹 [{time, content}]
+  traces          String @default("[]")
+}
+
+// ─────────────────────────────────────────────────
+// 售后申请
+// ─────────────────────────────────────────────────
+model AfterService {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id])
+  // 类型：refund=仅退款 return=退货退款
+  type        String
+  reason      String
+  description String?
+  images      String?                             // JSON 图片数组
+  // 状态：pending=待处理 approved=已同意 rejected=已拒绝 completed=已完成
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────
+// 收货地址
+// ─────────────────────────────────────────────────
+model Address {
+  id            Int     @id @default(autoincrement())
+  userId        Int
+  user          User    @relation(fields: [userId], references: [id])
+  name          String                            // 收货人
+  phone         String
+  provinceName  String
+  provinceCode  String
+  cityName      String
+  cityCode      String
+  districtName  String
+  districtCode  String
+  detailAddress String                            // 详细地址
+  addressTag    String? @default("")             // 标签：家/公司/等
+  isDefault     Int     @default(0)              // 1=默认地址
+  latitude      String?
+  longitude     String?
+}
+
+// ─────────────────────────────────────────────────
+// 优惠券模板
+// ─────────────────────────────────────────────────
+model Coupon {
+  id         Int          @id @default(autoincrement())
+  name       String
+  title      String
+  // type: price=满减 discount=折扣
+  type       String       @default("price")
+  // value: 满减时为减免金额（分），折扣时为折扣值（如 85 = 8.5折）
+  value      Int
+  // base: 使用门槛（分），0 表示无门槛
+  base       Int          @default(0)
+  currency   String       @default("¥")
+  timeLimit  String?                             // 展示用，如 "2024.01.01-2024.12.31"
+  startAt    DateTime
+  expireAt   DateTime
+  userCoupons UserCoupon[]
+}
+
+// ─────────────────────────────────────────────────
+// 用户优惠券关联
+// ─────────────────────────────────────────────────
+model UserCoupon {
+  id       Int       @id @default(autoincrement())
+  userId   Int
+  user     User      @relation(fields: [userId], references: [id])
+  couponId Int
+  coupon   Coupon    @relation(fields: [couponId], references: [id])
+  // status: unused=未使用 used=已使用 expired=已过期
+  status   String    @default("unused")
+  usedAt   DateTime?
+  orderId  Int?
+}
+
+// ─────────────────────────────────────────────────
+// 商品评论
+// ─────────────────────────────────────────────────
+model Comment {
+  id        Int      @id @default(autoincrement())
+  goodsId   Int
+  goods     Goods    @relation(fields: [goodsId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  orderId   Int?
+  skuId     String?
+  // specInfo: JSON，购买时的规格快照
+  specInfo  String?
+  content   String
+  rating    Int                                   // 1-5 星
+  images    String?                               // JSON 图片数组
+  // replyContent: 商家回复
+  replyContent String?
+  replyAt   DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────────────
+// 搜索历史
+// ─────────────────────────────────────────────────
+model SearchHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  keyword   String
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────
+// 首页轮播图
+// ─────────────────────────────────────────────────
+model Banner {
+  id    Int    @id @default(autoincrement())
+  image String
+  link  String?                                   // 跳转链接或 promotionId
+  sort  Int    @default(0)
+}
+
+// ─────────────────────────────────────────────────
+// 促销活动
+// ─────────────────────────────────────────────────
+model Promotion {
+  id               Int    @id @default(autoincrement())
+  promotionId      String @unique
+  title            String
+  description      String?
+  promotionCode    String                          // 如 "MERCHANT"
+  promotionSubCode String                          // 如 "MYJ"=满减 "MYG"=满折
+  tag              String                          // 如 "满减"
+  startTime        String
+  endTime          String
+  // activityLadder: JSON 数组，如 [{label:"满100元减99.9元"}]
+  activityLadder   String @default("[]")
+}

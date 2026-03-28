@@ -7,17 +7,17 @@
 ---
 
 ## 1. 项目与环境初始化
-- [ ] 1.1 项目初始化与基础依赖安装（如 `next`, `prisma`, `zod` 等）
-- [ ] 1.2 创建与配置环境变量 (`.env` 包含 `DATABASE_URL`，微信 AppID 等)
-- [ ] 1.3 初始化 Prisma (创建 `prisma/schema.prisma` 并配置 SQLite 数据源)
+- [x] 1.1 项目初始化与基础依赖安装（如 `next`, `prisma`, `zod` 等）
+- [x] 1.2 创建与配置环境变量 (`.env` 包含 `DATABASE_URL`，微信 AppID 等)
+- [x] 1.3 初始化 Prisma (创建 `prisma/schema.prisma` 并配置 SQLite 数据源)
 
 ## 2. 数据库建模与同步 (Prisma Schema)
-- [ ] 2.1 编写用户系统及认证相关模型 (`User`, `Session`)
-- [ ] 2.2 编写商品相关模型 (`Category`, `Goods`, `SpuTag`, `SpecGroup`, `SpecValue`, `Sku`)
-- [ ] 2.3 编写订单与购物车流程相关模型 (`Cart`, `Order`, `OrderItem`, `Logistics`, `AfterService`)
-- [ ] 2.4 编写营销与活动体系模型 (`Coupon`, `UserCoupon`, `Promotion`, `Banner`)
-- [ ] 2.5 编写其余业务相关模型 (`Address`, `Comment`, `SearchHistory`)
-- [ ] 2.6 执行数据库迁移并生成 Prisma Client (`npx prisma migrate dev --name init`、`npx prisma generate`)
+- [x] 2.1 编写用户系统及认证相关模型 (`User`, `Session`)
+- [x] 2.2 编写商品相关模型 (`Category`, `Goods`, `SpuTag`, `SpecGroup`, `SpecValue`, `Sku`)
+- [x] 2.3 编写订单与购物车流程相关模型 (`Cart`, `Order`, `OrderItem`, `Logistics`, `AfterService`)
+- [x] 2.4 编写营销与活动体系模型 (`Coupon`, `UserCoupon`, `Promotion`, `Banner`)
+- [x] 2.5 编写其余业务相关模型 (`Address`, `Comment`, `SearchHistory`)
+- [x] 2.6 执行数据库迁移并生成 Prisma Client (`npx prisma migrate dev --name init`、`npx prisma generate`)
 
 ## 3. 核心基础设施与工具类
 - [ ] 3.1 实例化并导出数据库单例工具 (`lib/db.ts`)
