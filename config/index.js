@@ -2,7 +2,7 @@ export const config = {
   /** 是否使用mock代替api返回 */
   useMock: false,
   /** 后端API地址 */
-  baseUrl: 'http://localhost:3000/api',
+  baseUrl: 'http://127.0.0.1:3000/api',
 };
 
 export const cdnBase =
