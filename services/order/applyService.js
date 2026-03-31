@@ -1,6 +1,7 @@
 import { config } from '../../config/index';
+import { request } from '../../utils/request';
 
-/** èŽ·å–å”®åŽå•mockæ•°æ® */
+/** »ñÈ¡ÊÛºóµ¥mockÊý¾Ý */
 function mockFetchRightsPreview(params) {
   const { delay } = require('../_utils/delay');
   const { genRightsPreview } = require('../../model/order/applyService');
@@ -8,30 +9,53 @@ function mockFetchRightsPreview(params) {
   return delay().then(() => genRightsPreview(params));
 }
 
-/** èŽ·å–å”®åŽå•æ•°æ® */
+/** »ñÈ¡ÊÛºóµ¥Êý¾Ý */
 export function fetchRightsPreview(params) {
   if (config.useMock) {
     return mockFetchRightsPreview(params);
   }
 
-  return new Promise((resolve) => {
-    resolve('real api');
+  const orderNo = params?.orderNo;
+  const targetSkuId = String(params?.skuId || '');
+  const numOfSku = Number(params?.numOfSku || 1);
+
+  return request(`/order/${orderNo}`).then((data) => {
+    const goods = (data.orderItemVOs || []).find((item) => String(item.skuId) === targetSkuId) || data.orderItemVOs?.[0];
+    const paidAmountEach = Number(goods?.actualPrice || 0);
+    const boughtQuantity = Number(goods?.buyQuantity || 1);
+    const applyQuantity = Math.min(Math.max(numOfSku, 1), boughtQuantity);
+
+    return {
+      data: {
+        spuId: goods?.spuId || params?.spuId,
+        skuId: goods?.skuId || targetSkuId,
+        goodsInfo: {
+          skuImage: goods?.goodsPictureUrl || '',
+          goodsName: goods?.goodsName || '',
+          specInfo: goods?.specifications || [],
+        },
+        paidAmountEach,
+        boughtQuantity,
+        numOfSku: applyQuantity,
+        numOfSkuAvailable: boughtQuantity,
+        refundableAmount: paidAmountEach * applyQuantity,
+        shippingFeeIncluded: Number(data.freightFee || 0),
+      },
+    };
   });
 }
 
-/** ç¡®è®¤æ”¶è´§ */
+/** È·ÈÏÊÕ»õ */
 export function dispatchConfirmReceived() {
   if (config.useMock) {
     const { delay } = require('../_utils/delay');
     return delay();
   }
 
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  return Promise.resolve({ code: 'Success', data: true });
 }
 
-/** èŽ·å–å¯é€‰çš„mockå”®åŽåŽŸå› åˆ—è¡¨ */
+/** »ñÈ¡¿ÉÑ¡µÄmockÊÛºóÔ­ÒòÁÐ±í */
 function mockFetchApplyReasonList(params) {
   const { delay } = require('../_utils/delay');
   const { genApplyReasonList } = require('../../model/order/applyService');
@@ -39,18 +63,24 @@ function mockFetchApplyReasonList(params) {
   return delay().then(() => genApplyReasonList(params));
 }
 
-/** èŽ·å–å¯é€‰çš„å”®åŽåŽŸå› åˆ—è¡¨ */
+/** »ñÈ¡¿ÉÑ¡µÄÊÛºóÔ­ÒòÁÐ±í */
 export function fetchApplyReasonList(params) {
   if (config.useMock) {
     return mockFetchApplyReasonList(params);
   }
 
-  return new Promise((resolve) => {
-    resolve('real api');
+  return Promise.resolve({
+    data: {
+      rightsReasonList: [
+        { id: 1, desc: 'ÉÌÆ·ÖÊÁ¿ÎÊÌâ' },
+        { id: 2, desc: 'ÉÌÆ·ÓëÃèÊö²»·û' },
+        { id: 3, desc: '²»ÏëÒªÁË' },
+      ],
+    },
   });
 }
 
-/** å‘èµ·mockå”®åŽç”³è¯· */
+/** ·¢ÆðmockÊÛºóÉêÇë */
 function mockDispatchApplyService(params) {
   const { delay } = require('../_utils/delay');
   const { applyService } = require('../../model/order/applyService');
@@ -58,13 +88,26 @@ function mockDispatchApplyService(params) {
   return delay().then(() => applyService(params));
 }
 
-/** å‘èµ·å”®åŽç”³è¯· */
+/** ·¢ÆðÊÛºóÉêÇë */
 export function dispatchApplyService(params) {
   if (config.useMock) {
     return mockDispatchApplyService(params);
   }
 
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  const orderNo = params?.rights?.orderNo;
+  const requestType = Number(params?.rights?.rightsType) === 10 ? 'return' : 'refund';
+
+  return request(`/order/${orderNo}/after-service`, {
+    method: 'POST',
+    data: {
+      type: requestType,
+      reason: params?.rights?.rightsReasonDesc || 'ÆäËû',
+      description: params?.refundMemo || '',
+      images: params?.rights?.rightsImageUrls || [],
+    },
+  }).then((data) => ({
+    data: {
+      rightsNo: String(data.afterServiceId),
+    },
+  }));
 }

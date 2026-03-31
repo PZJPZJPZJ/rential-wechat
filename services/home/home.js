@@ -1,4 +1,5 @@
 import { config, cdnBase } from '../../config/index';
+import { request } from '../../utils/request';
 
 /** 获取首页数据 */
 function mockFetchHome() {
@@ -47,7 +48,5 @@ export function fetchHome() {
   if (config.useMock) {
     return mockFetchHome();
   }
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  return request('/home');
 }

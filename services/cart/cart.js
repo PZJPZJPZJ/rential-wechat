@@ -1,4 +1,5 @@
 import { config } from '../../config/index';
+import { request } from '../../utils/request';
 
 /** 获取购物车mock数据 */
 function mockFetchCartGroupData(params) {
@@ -13,8 +14,5 @@ export function fetchCartGroupData(params) {
   if (config.useMock) {
     return mockFetchCartGroupData(params);
   }
-
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  return request('/cart').then((data) => ({ data }));
 }

@@ -82,7 +82,7 @@
 ## 6. 微信小程序前端对接整备
 - [x] 6.1 修改 `/config/index.js` 全局关闭 `useMock` 及重定向指向至后端 `baseUrl`
 - [x] 6.2 引入 `utils/request.js` 全局封装替换原生 `wx.request`，统一附加 `Authorization`
-- [ ] 6.3 调整前端 services 层对新 API 接口的全量验证匹配与联调测试
+- [x] 6.3 调整前端 services 层对新 API 接口的全量验证匹配与联调测试
 
 
 

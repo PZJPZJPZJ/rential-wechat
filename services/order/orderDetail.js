@@ -1,4 +1,5 @@
 import { config } from '../../config/index';
+import { request } from '../../utils/request';
 
 /** 获取订单详情mock数据 */
 function mockFetchOrderDetail(params) {
@@ -13,10 +14,8 @@ export function fetchOrderDetail(params) {
   if (config.useMock) {
     return mockFetchOrderDetail(params);
   }
-
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  const orderNo = params?.parameter;
+  return request(`/order/${orderNo}`).then((data) => ({ data }));
 }
 
 /** 获取客服mock数据 */
@@ -32,8 +31,10 @@ export function fetchBusinessTime(params) {
   if (config.useMock) {
     return mockFetchBusinessTime(params);
   }
-
-  return new Promise((resolve) => {
-    resolve('real api');
+  return Promise.resolve({
+    data: {
+      telphone: '4006336868',
+      businessTime: ['周一至周日 09:00-12:00', '周一至周日 13:00-18:00'],
+    },
   });
 }

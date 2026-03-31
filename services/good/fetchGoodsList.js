@@ -1,5 +1,12 @@
 /* eslint-disable no-param-reassign */
 import { config } from '../../config/index';
+import { request } from '../../utils/request';
+
+const toQuery = (params = {}) =>
+  Object.keys(params)
+    .filter((key) => params[key] !== undefined && params[key] !== null && params[key] !== '')
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&');
 
 /** 获取商品列表 */
 function mockFetchGoodsList(params) {
@@ -33,7 +40,6 @@ export function fetchGoodsList(params) {
   if (config.useMock) {
     return mockFetchGoodsList(params);
   }
-  return new Promise((resolve) => {
-    resolve('real api');
-  });
+  const query = toQuery(params || {});
+  return request(`/goods${query ? `?${query}` : ''}`);
 }
