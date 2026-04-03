@@ -25,16 +25,38 @@ const promotions = [
   { promotionId: '3', title: '品牌联合促销', subCode: 'MYJ', tag: '满减' },
 ];
 
+const templateProducts = [
+  { title: '纯棉宽松打底衫多色可选', descText: '100%纯棉，柔软亲肤，吸汗透气，夏日必备单品' },
+  { title: '秋季新款韩版宽松百搭连帽针织毛衣', descText: '慵懒风，柔软针织面料，宽松版型，显瘦百搭' },
+  { title: '高腰直筒牛仔裤女宽松显瘦垂感长裤', descText: '修饰腿型，提高腰线，复古水洗蓝，百搭不过时' },
+  { title: '极简风翻领长袖薄款衬衣职业通勤', descText: '不易起球，免烫工艺，垂坠感极佳，干练气质' },
+  { title: '加绒加厚保暖运动卫衣男女同款', descText: '内里摇粒绒，防风保暖，休闲运动皆宜' },
+  { title: '哑光丝绒唇釉显白不易掉色', descText: '高级丝绒质地，浓郁显色，长效持妆，不拔干' },
+  { title: '氨基酸温和保湿洁面乳洗面奶', descText: '温和洁净，深层补水，洗后不紧绷，敏感肌适用' },
+  { title: '持妆轻透粉底液遮瑕控油持久', descText: '轻薄透气，无暇底妆，24小时持妆力，防水防汗' },
+  { title: '防水持久极细眼线液笔不晕染', descText: '0.01mm极细笔尖，出水流畅，一笔成型，新手友好' },
+  { title: '清爽防晒霜SPF50+隔离紫外线', descText: '抗老防晒，质地轻盈，成膜快，不假白，全天防护' },
+  { title: '复古法式方领碎花长裙收腰显瘦', descText: '浪漫法式风情，优雅碎花，方领设计展露锁骨' },
+  { title: '多功能家用大容量空气炸锅', descText: '无油烟烹饪，全自动控温，360度热风循环，健康轻食' },
+  { title: '智能降噪真无线蓝牙耳机', descText: '主动降噪，HIFI重低音，超长续航，人体工学设计' },
+  { title: '家用全自动迷你破壁机豆浆机', descText: '免过滤，一键清洗，细腻无渣，冷热双打' },
+  { title: '高颜值便携保温杯大容量', descText: '316不锈钢内胆，24小时长效保温保冷，密封防漏' },
+];
+
 const buildGoodSeed = (idx: number, categoryId: number) => {
   const spuId = `SPU${1000 + idx}`;
   const skuBase = 200000 + idx * 10;
-  const salePrice = 9900 + idx * 500;
-  const linePrice = salePrice + 3000;
-  const stock = 100 + idx * 20;
+  
+  const tpl = templateProducts[idx % templateProducts.length];
+  
+  // 生成看起来合理的金额
+  const salePrice = (89 + (idx * 37) % 200) * 100;
+  const linePrice = salePrice + ((50 + (idx * 13) % 100) * 100);
+  const stock = 100 + (idx * 27) % 200;
 
   return {
     spuId,
-    title: `示例商品-${idx + 1}`,
+    title: tpl.title,
     primaryImage: `https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-${(idx % 3) + 1}a.png`,
     images: JSON.stringify([
       `https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-${(idx % 3) + 1}a.png`,
@@ -48,11 +70,11 @@ const buildGoodSeed = (idx: number, categoryId: number) => {
     minLinePrice: linePrice,
     maxLinePrice: linePrice + 1000,
     spuStockQuantity: stock * 3,
-    soldNum: idx * 10,
+    soldNum: (idx * 47) % 500,
     isPutOnSale: 1,
     isSoldOut: false,
     storeId: '1000',
-    etitle: '',
+    etitle: tpl.descText,
     categoryId,
     limitInfo: JSON.stringify([{ text: '限购5件' }]),
     spuTags: [{ title: idx % 2 === 0 ? '限时抢购' : '热卖' }],
@@ -174,10 +196,27 @@ async function main() {
     },
   });
 
+  const digital = await prisma.category.create({
+    data: {
+      groupId: '24951',
+      name: '数码',
+      thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/category/category-default.png',
+      sort: 4,
+    },
+  });
+  const home = await prisma.category.create({
+    data: {
+      groupId: '24952',
+      name: '家居',
+      thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/category/category-default.png',
+      sort: 5,
+    },
+  });
+
   const womenChild = await prisma.category.create({
     data: {
       groupId: '249480',
-      name: '连衣裙',
+      name: '裙装',
       thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/classify/img-9.png',
       parentId: women.id,
       sort: 1,
@@ -186,7 +225,7 @@ async function main() {
   const menChild = await prisma.category.create({
     data: {
       groupId: '249481',
-      name: '卫衣',
+      name: '上装',
       thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/classify/img-1.png',
       parentId: men.id,
       sort: 1,
@@ -195,15 +234,51 @@ async function main() {
   const beautyChild = await prisma.category.create({
     data: {
       groupId: '249482',
-      name: '眼影',
+      name: '彩妆',
       thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/mz-12b.png',
       parentId: beauty.id,
       sort: 1,
     },
   });
+  const beautySkinChild = await prisma.category.create({
+    data: {
+      groupId: '249483',
+      name: '护肤',
+      thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/category/category-default.png',
+      parentId: beauty.id,
+      sort: 2,
+    },
+  });
+  const digitalChild = await prisma.category.create({
+    data: {
+      groupId: '249484',
+      name: '影音娱乐',
+      thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/category/category-default.png',
+      parentId: digital.id,
+      sort: 1,
+    },
+  });
+  const homeChild = await prisma.category.create({
+    data: {
+      groupId: '249485',
+      name: '厨房小电',
+      thumbnail: 'https://tdesign.gtimg.com/miniprogram/template/retail/category/category-default.png',
+      parentId: home.id,
+      sort: 1,
+    },
+  });
 
-  const leafCategories = [womenChild.id, menChild.id, beautyChild.id];
-  for (let i = 0; i < 8; i += 1) {
+  const leafCategories = [
+    womenChild.id, 
+    menChild.id, 
+    beautyChild.id, 
+    beautySkinChild.id, 
+    digitalChild.id, 
+    homeChild.id
+  ];
+  
+  // 生成更多的商品 (以前是 8 个，现在我们生成 15 个，覆盖完上面的全部商品模板)
+  for (let i = 0; i < 15; i += 1) {
     const item = buildGoodSeed(i, leafCategories[i % leafCategories.length]);
     await prisma.goods.create({
       data: {
