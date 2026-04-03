@@ -1,4 +1,4 @@
-import { fetchPerson } from '../../../services/usercenter/fetchPerson';
+import { fetchPerson, updatePerson } from '../../../services/usercenter/fetchPerson';
 import { phoneEncryption } from '../../../utils/util';
 import Toast from 'tdesign-miniprogram/toast/index';
 
@@ -68,20 +68,30 @@ Page({
   },
   onConfirm(e) {
     const { value } = e.detail;
-    this.setData(
-      {
-        typeVisible: false,
-        'personInfo.gender': value,
-      },
-      () => {
-        Toast({
-          context: this,
-          selector: '#t-toast',
-          message: '设置成功',
-          theme: 'success',
-        });
-      },
-    );
+    const gender = Number(value);
+    updatePerson({ gender }).then(() => {
+      this.setData(
+        {
+          typeVisible: false,
+          'personInfo.gender': gender,
+        },
+        () => {
+          Toast({
+            context: this,
+            selector: '#t-toast',
+            message: '性别修改成功',
+            theme: 'success',
+          });
+        },
+      );
+    }).catch(() => {
+      Toast({
+        context: this,
+        selector: '#t-toast',
+        message: '修改失败，请重试',
+        theme: 'error',
+      });
+    });
   },
   async toModifyAvatar() {
     try {
@@ -101,12 +111,12 @@ Page({
           fail: (err) => reject(err),
         });
       });
-      const tempUrlArr = tempFilePath.split('/');
-      const tempFileName = tempUrlArr[tempUrlArr.length - 1];
+      await updatePerson({ avatarUrl: tempFilePath });
+      this.setData({ 'personInfo.avatarUrl': tempFilePath });
       Toast({
         context: this,
         selector: '#t-toast',
-        message: `已选择图片-${tempFileName}`,
+        message: '头像修改成功',
         theme: 'success',
       });
     } catch (error) {

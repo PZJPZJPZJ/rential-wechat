@@ -25,3 +25,11 @@ export function fetchPerson() {
   }
   return request('/user/profile');
 }
+
+/** 修改个人中心信息 */
+export function updatePerson(payload) {
+  if (config.useMock) {
+    return Promise.resolve(true);
+  }
+  return request('/user/profile', payload, 'PUT');
+}
